@@ -1,11 +1,9 @@
-version: "3.7"
-
 services:
   lnbits:
     image: opago/lnbits:${BRANCH:-main}
     container_name: lnbits
     environment:
-      - LNBITS_BACKEND_WALLET_CLASS=VoidWallet
+      - LNBITS_BACKEND_WALLET_CLASS=fakewallet
       - LNBITS_DATA_FOLDER=/data
       - LNBITS_DATABASE_URL=postgres://postgres:postgres@db:5432/lnbits
       - LNBITS_SITE_TITLE=LNbits
