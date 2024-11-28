@@ -669,6 +669,7 @@
       </q-dialog>
 
       <q-tabs
+        v-if="$q.screen.lt.md && (!g.user.admin || g.settings.lnbits_mobile_menu_enabled)"
         class="lt-md fixed-bottom left-0 right-0 bg-primary text-white shadow-2 z-top"
         active-class="px-0"
         indicator-color="transparent"

@@ -39,6 +39,7 @@ class UsersSettings(LNbitsSettings):
     lnbits_admin_users: list[str] = Field(default=[])
     lnbits_allowed_users: list[str] = Field(default=[])
     lnbits_allow_new_accounts: bool = Field(default=True)
+    lnbits_mobile_menu_enabled: bool = Field(default=True)
 
     @property
     def new_accounts_allowed(self) -> bool:

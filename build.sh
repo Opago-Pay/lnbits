@@ -6,6 +6,11 @@ set -e
 # Get current branch name
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
+# Generate superuser ID
+SUPER_USER=$(python3 -c 'import uuid; print(uuid.uuid4().hex)')
+echo "Generated superuser ID: $SUPER_USER"
+export SUPER_USER
+
 cleanup() {
     echo "Cleaning up containers..."
     docker-compose down
@@ -61,7 +66,8 @@ else
 fi
 
 # Only start containers if build and push succeeded
-BRANCH=$BRANCH docker-compose up -d
+BRANCH=$BRANCH SUPER_USER=$SUPER_USER docker-compose up -d
 
 echo "Build and push completed. Container starting now..."
 echo "Using branch: $BRANCH"
+echo "Using superuser ID: $SUPER_USER"
