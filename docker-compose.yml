@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+  lnbits:
+    image: opago/lnbits:${BRANCH:-main}
+    container_name: lnbits
+    environment:
+      - LNBITS_BACKEND_WALLET_CLASS=VoidWallet
+      - LNBITS_DATA_FOLDER=/data
+      - LNBITS_DATABASE_URL=postgres://postgres:postgres@db:5432/lnbits
+      - LNBITS_SITE_TITLE=LNbits
+      - LNBITS_SITE_TAGLINE=free and open-source lightning wallet
+      - LNBITS_SITE_DESCRIPTION=Use LNbits as an accounts system, a wallet, to process donations, or as a faucet.
+      - LNBITS_HOST=0.0.0.0
+      - LNBITS_BASEURL=http://localhost:5000/
+    ports:
+      - "5001:5000"
+    volumes:
+      - ./data:/data
+    depends_on:
+      - db
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: lnbits_postgres
+    environment:
+      - POSTGRES_DB=lnbits
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  postgres_data: 
