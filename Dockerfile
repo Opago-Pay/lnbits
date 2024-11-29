@@ -9,17 +9,27 @@ ENV PATH="/root/.local/bin:$PATH"
 
 WORKDIR /app
 
-# Only copy the files required to install the dependencies
-COPY pyproject.toml poetry.lock ./
+# Copy the entire source code first to ensure all modules are available
+COPY . .
 
-RUN mkdir data
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="/root/.local/bin:$PATH"
+
+RUN mkdir -p data
 
 ENV POETRY_NO_INTERACTION=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=1 \
     POETRY_VIRTUALENVS_CREATE=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
+    VIRTUAL_ENV=/app/.venv \
+    PATH="/app/.venv/bin:$PATH" \
+    LNBITS_PORT="5000" \
+    LNBITS_HOST="0.0.0.0" \
+    LNBITS_BACKEND_WALLET_CLASS="FakeWallet" \
+    LNBITS_DEBUG="true" \
+    PYTHONUNBUFFERED=1
 
-RUN poetry install --only main
+# Install all dependencies including dev dependencies
+RUN poetry install
 
 FROM python:3.10-slim-bookworm
 
@@ -43,13 +53,12 @@ ENV POETRY_NO_INTERACTION=1 \
 
 WORKDIR /app
 
-COPY . .
-COPY --from=builder /app/.venv .venv
+# Copy the entire source code and virtual environment
+COPY --from=builder /app .
 
-RUN poetry install --only main
-
-ENV LNBITS_PORT="5000"
-ENV LNBITS_HOST="0.0.0.0"
+ENV LNBITS_PORT="5000" \
+    LNBITS_HOST="0.0.0.0" \
+    LNBITS_BACKEND_WALLET_CLASS="FakeWallet"
 
 EXPOSE 5000
 

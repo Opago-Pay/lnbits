@@ -6,11 +6,6 @@ set -e
 # Get current branch name
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-# Generate superuser ID
-SUPER_USER=$(python3 -c 'import uuid; print(uuid.uuid4().hex)')
-echo "Generated superuser ID: $SUPER_USER"
-export SUPER_USER
-
 cleanup() {
     echo "Cleaning up containers..."
     docker-compose down
@@ -39,8 +34,39 @@ retry() {
     done
 }
 
-# Stop any running containers from this compose file
+# Function to wait for LNbits and get superuser
+get_superuser() {
+    local max_attempts=12
+    local attempt=1
+    local superuser=""
+    
+    echo "Waiting for LNbits to initialize..."
+    while [ $attempt -le $max_attempts ]; do
+        echo "Attempt $attempt of $max_attempts..."
+        
+        if docker-compose exec -T db pg_isready -U postgres >/dev/null 2>&1; then
+            superuser=$(docker-compose exec -T db psql -U postgres -d lnbits -t -c "SELECT super_user FROM settings WHERE super_user IS NOT NULL LIMIT 1;")
+            if [ ! -z "$superuser" ]; then
+                echo "Found superuser ID: $superuser"
+                return 0
+            fi
+            echo "Database ready but settings not initialized yet..."
+        else
+            echo "Database not ready yet..."
+        fi
+        
+        attempt=$((attempt + 1))
+        sleep 10
+    done
+    
+    echo "Failed to get superuser ID after $max_attempts attempts. Showing LNbits logs:"
+    docker-compose logs lnbits --tail 50
+    return 1
+}
+
+# Stop any running containers and remove postgres volume
 docker-compose down
+docker volume rm lnbits_postgres_data || true
 
 # Create and use a new builder that supports multi-platform builds
 docker buildx rm multiarch-builder || true
@@ -65,9 +91,11 @@ else
       .
 fi
 
-# Only start containers if build and push succeeded
-BRANCH=$BRANCH SUPER_USER=$SUPER_USER docker-compose up -d
+# Start containers
+BRANCH=$BRANCH docker-compose up -d
+
+# Wait for LNbits to initialize and get superuser ID
+get_superuser
 
 echo "Build and push completed. Container starting now..."
 echo "Using branch: $BRANCH"
-echo "Using superuser ID: $SUPER_USER"
