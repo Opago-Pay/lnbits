@@ -11,6 +11,10 @@ services:
       - LNBITS_SITE_DESCRIPTION=Use LNbits as an accounts system, a wallet, to process donations, or as a faucet.
       - LNBITS_HOST=0.0.0.0
       - LNBITS_BASEURL=http://localhost:5000/
+      - SUPER_USER=0583fc1aa69913ccf621808eb32bfa87
+      - LNBITS_ADMIN_EXTENSIONS="ngrok, admin"
+      - LNBITS_ADMIN_UI=true
+
     ports:
       - "5001:5000"
     volumes:

@@ -45,8 +45,19 @@ get_superuser() {
         echo "Attempt $attempt of $max_attempts..."
         
         if docker-compose exec -T db pg_isready -U postgres >/dev/null 2>&1; then
-            # First account created is typically the admin
-            superuser=$(docker-compose exec -T db psql -U postgres -d lnbits -t -c "SELECT id FROM accounts ORDER BY rowid LIMIT 1;")
+            echo "Database Tables:"
+            docker-compose exec -T db psql -U postgres -d lnbits -c "\dt"
+            
+            echo "\nAccounts Table:"
+            docker-compose exec -T db psql -U postgres -d lnbits -c "SELECT * FROM accounts;"
+            
+            echo "\nSettings Table:"
+            docker-compose exec -T db psql -U postgres -d lnbits -c "SELECT * FROM settings;"
+            
+            echo "\nWallets Table:"
+            docker-compose exec -T db psql -U postgres -d lnbits -c "SELECT * FROM wallets;"
+            
+            superuser=$(docker-compose exec -T db psql -U postgres -d lnbits -t -c "SELECT id FROM accounts LIMIT 1;")
             if [ ! -z "$superuser" ]; then
                 echo "Found superuser ID: $superuser"
                 return 0
